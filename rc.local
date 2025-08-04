@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+
+this=$(realpath $0)
+FLAG=0
+
+if ! [ -z $FLAG ]; then
+    resize2fs "$(findmnt -no source /)"
+    rm "$this"
+    systemctl stop rc-local.service
+else
+    # regen ssh keys
+    dpkg-reconfigure openssh-server
+    systemctl enable ssh.service
+
+    # expand root parition
+    rp="$(findmnt -no source /)"
+    rpn="$(echo "$rp" | grep -Eo '[[:digit:]]*$')"
+    rd="/dev/$(lsblk -no pkname "$rp")"
+    echo "size=+" | sfdisk -f -N "$rpn" "$rd"
+
+    # setup for expand fs
+    sed -i "s/FLAG=0/FLAG=1/g" "$this"
+    reboot
+fi
+
