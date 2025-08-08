@@ -1,0 +1,6 @@
+*.img
+*.deb
+mnt
+mnt/*
+
+.DS_Store

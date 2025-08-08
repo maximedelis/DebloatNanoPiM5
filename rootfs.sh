@@ -46,7 +46,7 @@ sudo debootstrap --arch arm64 --include "$pkgs" --exclude "isc-dhcp-client" "$de
 
 user="debian"
 pswd="debian"
-hostname="NanopiM5"
+hostname="NanoPiM5"
 
 sudo chroot mnt/ /usr/sbin/useradd -m "$user" -s '/bin/bash'
 sudo chroot mnt/ /bin/sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
@@ -77,15 +77,15 @@ sudo rm -fv "mnt/etc/systemd/system/multi-user.target.wants/ssh.service"
 
 ### Boot img
 
-#./boot.sh
+./boot.sh
 
 
 
-sudo fstrim -v mnt
+# sudo fstrim -v mnt
 
-sudo umount mnt/proc
-sudo umount mnt/sys
-sudo umount mnt/dev
-sudo umount mnt
-sudo losetup -d "$lodev"
-chmod 444 "$media"
+# sudo umount mnt/proc
+# sudo umount mnt/sys
+# sudo umount mnt/dev
+# sudo umount mnt
+# sudo losetup -d "$lodev"
+# chmod 444 "$media"

@@ -54,12 +54,16 @@ sudo cp rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 # Setup fstab
 
 echo -e "
-$(sudo chroot mnt blkid /dev/loop0p1 | grep -oPe '\s\KUUID="[^"]*"') /     ext4 noatime 0 1
-$(sudo chroot mnt blkid /dev/loop1p1 | grep -oPe '\s\KUUID="[^"]*"') /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
+$(sudo chroot mnt blkid /dev/loop0p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /     ext4 noatime 0 1
+$(sudo chroot mnt blkid /dev/loop1p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
 
 
-### umount 
+### Umount and install U-Boot
 
 sudo umount mnt/boot
 sudo losetup -d "$lodevb"
-chmod 444 "$mediab"
+
+sudo dd if=uboot/idbloader of=boot.img seek=64 bs=512
+sudo dd if=uboot/u-boot.itb of=boot.img seek=16384 bs=512
+
+# chmod 444 "$mediab"
