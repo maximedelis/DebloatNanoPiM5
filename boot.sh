@@ -9,7 +9,7 @@ truncate -s "$size" "$mediab"
 cat <<-EOF | /usr/sbin/sfdisk "$mediab"
 label: gpt
 unit: sectors
-first-lba: 64
+first-lba: 34
 part1: start=32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name=boot
 EOF
 sync
@@ -61,9 +61,9 @@ $(sudo chroot mnt blkid /dev/loop1p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"/
 ### Umount and install U-Boot
 
 sudo umount mnt/boot
+
+# sudo dd if=uboot/idbloader of="$lodevb" seek=64 bs=512 && sync
+# sudo dd if=uboot/u-boot.itb of="$lodevb" seek=16384 bs=512 && sync
+
 sudo losetup -d "$lodevb"
-
-# sudo dd if=uboot/idbloader of=boot.img seek=64 bs=512
-# sudo dd if=uboot/u-boot.itb of=boot.img seek=16384 bs=512
-
 # chmod 444 "$mediab"
