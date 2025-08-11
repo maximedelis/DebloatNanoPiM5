@@ -1,5 +1,5 @@
 *.img
-*.deb
+*.deb*
 mnt
 mnt/*
 

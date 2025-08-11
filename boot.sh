@@ -31,7 +31,7 @@ kurl=$(curl -s "$latest" | grep 'browser_download_url' | grep 'linux-image' | gr
 kfile="$(basename $kurl)"
 wget "$kurl"
 
-cp "$kfile" mnt/tmp/kernel.deb
+mv "$kfile" mnt/tmp/kernel.deb
 sudo chroot mnt dpkg -i '/tmp/kernel.deb'
 sudo mkdir -p 'mnt/boot/extlinux'
 linux_version=$(sudo chroot mnt linux-version list)
@@ -54,16 +54,16 @@ sudo cp uboot/rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 # Setup fstab
 
 echo -e "
-$(sudo chroot mnt blkid /dev/loop0p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /     ext4 noatime 0 1
-$(sudo chroot mnt blkid /dev/loop1p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
+$(sudo blkid "/dev/${lodev}p1" | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /     ext4 noatime 0 1
+$(sudo blkid "/dev/${lodevb}p1" | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
 
 
 ### Umount and install U-Boot
 
 sudo umount mnt/boot
 
-# sudo dd if=uboot/idbloader of="$lodevb" seek=64 bs=512 && sync
-# sudo dd if=uboot/u-boot.itb of="$lodevb" seek=16384 bs=512 && sync
+sudo dd if=uboot/idbloader of="$lodevb" seek=64 bs=512 && sync
+sudo dd if=uboot/u-boot.itb of="$lodevb" seek=16384 bs=512 && sync
 
 sudo losetup -d "$lodevb"
 # chmod 444 "$mediab"
