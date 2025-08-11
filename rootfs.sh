@@ -81,11 +81,11 @@ sudo rm -fv "mnt/etc/systemd/system/multi-user.target.wants/ssh.service"
 
 
 
-# sudo fstrim -v mnt
+sudo fstrim -v mnt
 
-# sudo umount mnt/proc
-# sudo umount mnt/sys
-# sudo umount mnt/dev
-# sudo umount mnt
-# sudo losetup -d "$lodev"
+sudo umount mnt/proc
+sudo umount mnt/sys
+sudo umount mnt/dev
+sudo umount mnt
+sudo losetup -d "$lodev"
 # chmod 444 "$media"

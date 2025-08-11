@@ -9,7 +9,7 @@ truncate -s "$size" "$mediab"
 cat <<-EOF | /usr/sbin/sfdisk "$mediab"
 label: gpt
 unit: sectors
-first-lba: 2048
+first-lba: 64
 part1: start=32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name=boot
 EOF
 sync
@@ -49,7 +49,7 @@ LABEL Linux
 
 
 # DTB
-sudo cp rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
+sudo cp uboot/rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 
 # Setup fstab
 
@@ -63,7 +63,7 @@ $(sudo chroot mnt blkid /dev/loop1p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"/
 sudo umount mnt/boot
 sudo losetup -d "$lodevb"
 
-sudo dd if=uboot/idbloader of=boot.img seek=64 bs=512
-sudo dd if=uboot/u-boot.itb of=boot.img seek=16384 bs=512
+# sudo dd if=uboot/idbloader of=boot.img seek=64 bs=512
+# sudo dd if=uboot/u-boot.itb of=boot.img seek=16384 bs=512
 
 # chmod 444 "$mediab"
