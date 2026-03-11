@@ -1,6 +1,6 @@
 media="rootfs.img"
 size="2g"
-deb_dist='bookworm'
+deb_dist='trixie'
 deb_src="http://ftp.fr.debian.org/debian/"
 
 
