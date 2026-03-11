@@ -42,10 +42,10 @@ default Linux
 timeout 30
 
 LABEL Linux
-\tlinux /boot/vmlinuz-$linux_version
-\tinitrd /boot/initrd-$linux_version
-\tfdt /boot/rk3576-nanopi-m5.dtb
-\tappend root=$(sudo chroot mnt blkid /dev/loop0p1 | grep -oPe '\s\KUUID="[^"]*"')" | sudo tee mnt/boot/extlinux/extlinux.conf
+\tlinux /vmlinuz-$linux_version
+\tinitrd /initrd.img-$linux_version
+\tfdt /rk3576-nanopi-m5.dtb
+\tappend root=UUID=$(sudo chroot mnt blkid -o value -s UUID -p "${lodev}p1") rootwait" | sudo tee mnt/boot/extlinux/extlinux.conf
 
 
 # DTB
@@ -54,16 +54,16 @@ sudo cp uboot/rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 # Setup fstab
 
 echo -e "
-$(sudo blkid "/dev/${lodev}p1" | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /     ext4 noatime 0 1
-$(sudo blkid "/dev/${lodevb}p1" | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
+$(sudo blkid -o value -s UUID -p "${lodev}p1") /     ext4 noatime 0 1
+$(sudo blkid -o value -s UUID -p "${lodevb}p1") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
 
 
 ### Umount and install U-Boot
 
 sudo umount mnt/boot
 
-sudo dd if=uboot/idbloader of="$lodevb" seek=64 bs=512 && sync
-sudo dd if=uboot/u-boot.itb of="$lodevb" seek=16384 bs=512 && sync
+sudo dd if=uboot/idbloader of="$lodevb" seek=64 bs=512 conv=notrunc && sync
+sudo dd if=uboot/u-boot.itb of="$lodevb" seek=16384 bs=512 conv=notrunc && sync
 
 sudo losetup -d "$lodevb"
 # chmod 444 "$mediab"
