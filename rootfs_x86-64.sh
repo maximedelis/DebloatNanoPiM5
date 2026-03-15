@@ -1,10 +1,7 @@
 media="rootfs.img"
 size="2g"
-deb_dist='bookworm'
+deb_dist='trixie'
 deb_src="http://ftp.fr.debian.org/debian/"
-
-
-
 
 ### Create empty img
 truncate -s "$size" "$media"
@@ -28,9 +25,6 @@ sudo mkdir -p mnt/sys/ && sudo mount --bind /sys/ mnt/sys/
 sudo mkdir -p mnt/proc/ && sudo mount --bind /proc/ mnt/proc/
 sudo mkdir -p mnt/dev/ && sudo mount --bind /dev/ mnt/dev/
 
-
-
-
 ### Install system
 pkgs="initramfs-tools, dbus, dhcpcd, libpam-systemd, openssh-server, systemd-timesyncd, rfkill, wireless-regdb, wpasupplicant, \
 bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd, linux-base"
@@ -38,7 +32,6 @@ bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd, linux-base"
 #TODO: cache
 
 sudo debootstrap --arch arm64 --include "$pkgs" --exclude "isc-dhcp-client" "$deb_dist" mnt "$deb_src"
-
 
 ### x86-64 specifics
 
@@ -60,9 +53,6 @@ sudo sed -i "s/127.0.0.1\tlocalhost/127.0.0.1\tlocalhost\n127.0.1.1\t$hostname/"
 
 #Startup script
 sudo install -Dvm 754 'rc.local' "mnt/etc/rc.local"
-
-
-
 
 ### Cleanup
 
@@ -89,3 +79,4 @@ sudo umount mnt
 sudo losetup -d "$lodev_rootfs"
 
 # chmod 444 "$media"
+
