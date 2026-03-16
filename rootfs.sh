@@ -1,3 +1,7 @@
+#!/bin/bash
+set -Eeuo pipefail
+set -x
+
 media="rootfs.img"
 size="2g"
 deb_dist='trixie'

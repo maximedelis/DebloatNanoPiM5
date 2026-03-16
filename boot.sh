@@ -1,3 +1,7 @@
+#!/bin/bash
+set -Eeuo pipefail
+set -x
+
 mediab="boot.img"
 size="100M"
 
