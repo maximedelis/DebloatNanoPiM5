@@ -42,6 +42,9 @@ sudo debootstrap --arch arm64 --include "$pkgs" --exclude "isc-dhcp-client" "$de
 if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
     sudo cp /usr/bin/qemu-aarch64-static mnt/usr/bin
 fi
+echo "deb http://deb.debian.org/debian ${deb_dist} main contrib non-free-firmware" | sudo tee mnt/etc/apt/sources.list >/dev/null
+sudo chroot mnt apt update
+sudo chroot mnt apt install -y firmware-realtek
 
 
 
