@@ -17,13 +17,13 @@ part1: start=32768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name=rootfs
 EOF
 sync
 
-lodev="$(/usr/sbin/losetup -f)"
-sudo losetup -vP "$lodev" "$media" && sync
-sudo mkfs.ext4 -L rootfs -vO metadata_csum_seed "${lodev}p1" && sync
+lodev_rootfs="$(/usr/sbin/losetup -f)"
+sudo losetup -vP "$lodev_rootfs" "$media" && sync
+sudo mkfs.ext4 -L rootfs -vO metadata_csum_seed "${lodev_rootfs}p1" && sync
 
 # Mount
 mkdir -p mnt
-sudo mount -o rw "${lodev}p1" mnt
+sudo mount -o rw "${lodev_rootfs}p1" mnt
 sudo mkdir -p mnt/sys/ && sudo mount --bind /sys/ mnt/sys/
 sudo mkdir -p mnt/proc/ && sudo mount --bind /proc/ mnt/proc/
 sudo mkdir -p mnt/dev/ && sudo mount --bind /dev/ mnt/dev/
@@ -33,12 +33,15 @@ sudo mkdir -p mnt/dev/ && sudo mount --bind /dev/ mnt/dev/
 
 ### Install system
 pkgs="initramfs-tools, dbus, dhcpcd, libpam-systemd, openssh-server, systemd-timesyncd, rfkill, wireless-regdb, wpasupplicant, \
-bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd"
+bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd, linux-base, network-manager"
 
 #TODO: cache
 
 sudo debootstrap --arch arm64 --include "$pkgs" --exclude "isc-dhcp-client" "$deb_dist" mnt "$deb_src"
 
+if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
+    sudo cp /usr/bin/qemu-aarch64-static mnt/usr/bin
+fi
 
 
 
@@ -48,9 +51,9 @@ user="debian"
 pswd="debian"
 hostname="NanoPiM5"
 
-sudo chroot mnt/ /usr/sbin/useradd -m "$user" -s '/bin/bash'
-sudo chroot mnt/ /bin/sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
-sudo chroot mnt/ /usr/bin/passwd -e "$user"
+sudo chroot mnt/ useradd -m "$user" -s '/bin/bash'
+sudo chroot mnt/ sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
+sudo chroot mnt/ passwd -e "$user"
 (umask 377 && echo "$user ALL=(ALL) NOPASSWD: ALL" | sudo tee "mnt/etc/sudoers.d/$user")
 
 echo $hostname | sudo tee "mnt/etc/hostname"
@@ -60,6 +63,10 @@ sudo sed -i "s/127.0.0.1\tlocalhost/127.0.0.1\tlocalhost\n127.0.1.1\t$hostname/"
 sudo install -Dvm 754 'rc.local' "mnt/etc/rc.local"
 
 
+
+### Boot img
+
+./boot.sh
 
 
 ### Cleanup
@@ -71,14 +78,10 @@ sudo truncate -s0 "mnt/etc/machine-id"
 sudo rm -fv "mnt/etc/systemd/system/sshd.service"
 sudo rm -fv "mnt/etc/systemd/system/multi-user.target.wants/ssh.service"
 
-
-
-
-
-### Boot img
-
-./boot.sh
-
+# Remove cross-plat binary
+if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
+    sudo rm mnt/usr/bin/qemu-aarch64-static
+fi
 
 
 sudo fstrim -v mnt
@@ -87,5 +90,5 @@ sudo umount mnt/proc
 sudo umount mnt/sys
 sudo umount mnt/dev
 sudo umount mnt
-sudo losetup -d "$lodev"
+sudo losetup -d "$lodev_rootfs"
 # chmod 444 "$media"
