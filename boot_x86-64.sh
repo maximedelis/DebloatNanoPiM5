@@ -23,6 +23,9 @@ sudo mkdir -p mnt/boot
 sudo mount -o rw "${lodev_boot}p1" mnt/boot
 
 
+lodev_rootfs="$(findmnt -nvo SOURCE mnt)"
+sudo cp /usr/bin/qemu-aarch64-static mnt/usr/bin
+
 ### Download Linux Kernel from Inindev
 latest='https://api.github.com/repos/inindev/linux-rockchip/releases/latest'
 kurl=$(curl -s "$latest" | grep 'browser_download_url' | grep 'linux-image' | grep -v 'dbg' | grep -o 'https://[^"]*')
@@ -30,9 +33,9 @@ kfile="$(basename $kurl)"
 wget "$kurl"
 
 sudo cp "$kfile" mnt/tmp/kernel.deb
-sudo chroot mnt dpkg -i '/tmp/kernel.deb'
+sudo chroot mnt /usr/bin/env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/dpkg -i '/tmp/kernel.deb'
 sudo mkdir -p 'mnt/boot/extlinux'
-linux_version=$(sudo chroot mnt linux-version list)
+linux_version=$(sudo chroot mnt /usr/bin/env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/linux-version list | head -n 1)
 echo -e "
 menu title u-boot menu
 prompt 0
@@ -40,10 +43,10 @@ default Linux
 timeout 30
 
 LABEL Linux
-\tlinux /boot/vmlinuz-$linux_version
-\tinitrd /boot/initrd-$linux_version
-\tfdt /boot/rk3576-nanopi-m5.dtb
-\tappend root=$(sudo chroot mnt blkid /dev/loop18p1 | grep -oPe '\s\KUUID="[^"]*"')" | sudo tee mnt/boot/extlinux/extlinux.conf
+\tlinux /vmlinuz-$linux_version
+\tinitrd /initrd.img-$linux_version
+\tfdt /rk3576-nanopi-m5.dtb
+\tappend root=UUID=$(sudo blkid -s UUID -o value "${lodev_rootfs}") rootwait" | sudo tee mnt/boot/extlinux/extlinux.conf
 
 
 # DTB
@@ -52,8 +55,8 @@ sudo cp uboot/rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 # Setup fstab
 
 echo -e "
-$(sudo chroot mnt blkid /dev/loop18p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /     ext4 noatime 0 1
-$(sudo chroot mnt blkid /dev/loop19p1 | grep -oPe '\s\KUUID="[^"]*"' | sed "s/\"//g") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
+UUID=$(sudo blkid -s UUID -o value "${lodev_rootfs}") /     ext4 noatime 0 1
+UUID=$(sudo blkid -s UUID -o value "${lodev_boot}p1") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
 
 ### Umount and install U-Boot
 

@@ -1,10 +1,7 @@
 media="rootfs.img"
 size="2g"
-deb_dist='bookworm'
+deb_dist='trixie'
 deb_src="http://ftp.fr.debian.org/debian/"
-
-
-
 
 ### Create empty img
 truncate -s "$size" "$media"
@@ -28,21 +25,16 @@ sudo mkdir -p mnt/sys/ && sudo mount --bind /sys/ mnt/sys/
 sudo mkdir -p mnt/proc/ && sudo mount --bind /proc/ mnt/proc/
 sudo mkdir -p mnt/dev/ && sudo mount --bind /dev/ mnt/dev/
 
-
-
-
 ### Install system
 pkgs="initramfs-tools, dbus, dhcpcd, libpam-systemd, openssh-server, systemd-timesyncd, rfkill, wireless-regdb, wpasupplicant, \
-bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd"
+bc, curl, pciutils, sudo, unzip, wget, xxd, xz-utils, zip, zstd, linux-base"
 
 #TODO: cache
 
 sudo debootstrap --arch arm64 --include "$pkgs" --exclude "isc-dhcp-client" "$deb_dist" mnt "$deb_src"
 
-
 ### x86-64 specifics
 
-sudo apt install qemu-user-static
 sudo cp /usr/bin/qemu-aarch64-static mnt/usr/bin
 
 ### Config system
@@ -51,9 +43,9 @@ user="debian"
 pswd="debian"
 hostname="NanoPiM5"
 
-sudo chroot mnt/ qemu-aarch64-static /usr/sbin/useradd -m "$user" -s '/bin/bash'
-sudo chroot mnt/ qemu-aarch64-static /bin/sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
-sudo chroot mnt/ qemu-aarch64-static /usr/bin/passwd -e "$user"
+sudo chroot mnt/ /usr/bin/env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /usr/sbin/useradd -m "$user" -s '/bin/bash'
+sudo chroot mnt/ /usr/bin/env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
+sudo chroot mnt/ /usr/bin/env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/passwd -e "$user"
 (umask 377 && echo "$user ALL=(ALL) NOPASSWD: ALL" | sudo tee "mnt/etc/sudoers.d/$user")
 
 echo $hostname | sudo tee "mnt/etc/hostname"
@@ -61,9 +53,6 @@ sudo sed -i "s/127.0.0.1\tlocalhost/127.0.0.1\tlocalhost\n127.0.1.1\t$hostname/"
 
 #Startup script
 sudo install -Dvm 754 'rc.local' "mnt/etc/rc.local"
-
-
-
 
 ### Cleanup
 
@@ -90,3 +79,4 @@ sudo umount mnt
 sudo losetup -d "$lodev_rootfs"
 
 # chmod 444 "$media"
+
