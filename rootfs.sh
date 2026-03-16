@@ -58,7 +58,7 @@ user="debian"
 pswd="debian"
 hostname="NanoPiM5"
 
-sudo chroot mnt/ useradd -m "$user" -s '/bin/bash'
+sudo chroot mnt/ /usr/sbin/useradd -m "$user" -s '/bin/bash'
 sudo chroot mnt/ sh -c "/usr/bin/echo $user:$pswd | /usr/sbin/chpasswd -c YESCRYPT"
 sudo chroot mnt/ passwd -e "$user"
 (umask 377 && echo "$user ALL=(ALL) NOPASSWD: ALL" | sudo tee "mnt/etc/sudoers.d/$user")
