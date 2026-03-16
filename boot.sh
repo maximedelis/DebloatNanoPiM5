@@ -54,8 +54,8 @@ sudo cp uboot/rk3576-nanopi-m5.dtb mnt/boot/rk3576-nanopi-m5.dtb
 # Setup fstab
 
 echo -e "
-$(sudo blkid -o value -s UUID -p "${lodev}p1") /     ext4 noatime 0 1
-$(sudo blkid -o value -s UUID -p "${lodevb}p1") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
+UUID=$(sudo blkid -o value -s UUID -p "${lodev}p1") /     ext4 noatime 0 1
+UUID=$(sudo blkid -o value -s UUID -p "${lodevb}p1") /boot ext4 noatime 0 1" | sudo tee mnt/etc/fstab
 
 
 ### Umount and install U-Boot
